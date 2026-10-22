@@ -1,0 +1,3 @@
+# SolidWorks MCP Server Dependencies (updated for SolidWorks 2026)
+mcp>=1.20,<2
+pywin32>=306
