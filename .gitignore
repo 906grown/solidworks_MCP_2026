@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.rar
+config.local.json
+.env
+dist/
+build/
+*.egg-info/
+shots/
+*.bmp
