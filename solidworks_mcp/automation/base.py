@@ -22,6 +22,13 @@ from ..utils import UnitConverter, find_solidworks, find_template
 logger = logging.getLogger(__name__)
 
 
+
+def _revision(app):
+    """SolidWorks version string. RevisionNumber is a property on late-bound
+    objects and a method on typed (gen_py) ones."""
+    value = app.RevisionNumber
+    return value() if callable(value) else value
+
 class SolidWorksAutomation:
     """
     Core SolidWorks automation class
@@ -51,19 +58,16 @@ class SolidWorksAutomation:
             return False
         
         try:
-            # Test connection by accessing a property
-            _ = self._sw_app.RevisionNumber
+            # The typed COM wrapper makes RevisionNumber a method, so it must be
+            # called; just reading it never touches SolidWorks and can't detect
+            # that SolidWorks was closed.
+            _revision(self._sw_app)
             return True
-        except:
-            try:
-                # Some versions use method instead of property
-                _ = self._sw_app.RevisionNumber()
-                return True
-            except:
-                self._connected = False
-                self._sw_app = None
-                return False
-    
+        except Exception:
+            self._connected = False
+            self._sw_app = None
+            return False
+
     @property
     def units(self) -> UnitConverter:
         """Get unit converter"""
@@ -136,10 +140,7 @@ class SolidWorksAutomation:
                     self._sw_app.Visible = True
                     
                     # Get version (property or method)
-                    try:
-                        version = self._sw_app.RevisionNumber
-                    except:
-                        version = self._sw_app.RevisionNumber()
+                    version = _revision(self._sw_app)
                     
                     logger.info(f"Connected via method {i+1}: {version}")
                     self._connected = True
@@ -163,10 +164,7 @@ class SolidWorksAutomation:
             
             # Step 1: Try connecting to running instance
             if self._try_connect_com():
-                try:
-                    version = self._sw_app.RevisionNumber
-                except:
-                    version = self._sw_app.RevisionNumber()
+                version = _revision(self._sw_app)
                 
                 return self._result(True, f"Connected to SolidWorks {version}",
                                   SwErrors.swSuccess,
@@ -200,10 +198,7 @@ class SolidWorksAutomation:
                 logger.debug(f"Connection attempt at {elapsed}s...")
                 
                 if self._try_connect_com():
-                    try:
-                        version = self._sw_app.RevisionNumber
-                    except:
-                        version = self._sw_app.RevisionNumber()
+                    version = _revision(self._sw_app)
                     
                     logger.info(f"Connected after {elapsed}s")
                     return self._result(True,
