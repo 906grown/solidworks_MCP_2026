@@ -551,11 +551,20 @@ def _execute_python_fixed(code: str) -> Dict:
         import math
         import os as os_module
         
+        try:
+            active_doc = sw_automation.app.ActiveDoc if sw_automation.app else None
+        except Exception:
+            # SolidWorks was closed or restarted since we connected: reconnect once.
+            r = sw_automation.connect()
+            if not r["success"]:
+                return r
+            active_doc = sw_automation.app.ActiveDoc
+        
         # Prepare execution context with many useful objects
         exec_globals = {
             # SolidWorks objects
             'sw': sw_automation.app,
-            'doc': sw_automation.app.ActiveDoc if sw_automation.app else None,
+            'doc': active_doc,
             'automation': sw_automation,
             
             # COM libraries
