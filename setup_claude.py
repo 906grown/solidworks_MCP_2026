@@ -14,6 +14,10 @@ candidates = [os.path.join(appdata, "Claude")]
 pk = os.path.join(local, "Packages")
 if os.path.isdir(pk):
     candidates += [os.path.join(pk, d, "LocalCache", "Roaming", "Claude") for d in os.listdir(pk) if d.lower().startswith("claude")]
+# Newer Claude desktop builds keep settings in %LOCALAPPDATA%\Claude-Data\<id>
+cd = os.path.join(local, "Claude-Data")
+if os.path.isdir(cd):
+    candidates += [os.path.join(cd, d) for d in os.listdir(cd) if os.path.isdir(os.path.join(cd, d))]
 targets = [d for d in candidates if os.path.isdir(d)] or [candidates[0]]
 entry = {"command": sys.executable, "args": [os.path.join(here, "solidworks_mcp_server.py")]}
 for d in targets:
